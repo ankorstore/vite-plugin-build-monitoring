@@ -1,0 +1,41 @@
+{
+  "name": "vite-plugin-build-monitoring",
+  "version": "1.0.0",
+  "description": "Monitor ram Memory when building, bundle sizing ans node_modules sizing",
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ankorstore/vite-plugin-build-monitoring.git"
+  },
+  "keywords": [
+    "vite",
+    "monitoring",
+    "ram",
+    "memoery",
+    "bundle",
+    "size"
+  ],
+  "author": "MatthD",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ankorstore/vite-plugin-build-monitoring/issues"
+  },
+  "homepage": "https://github.com/ankorstore/vite-plugin-build-monitoring#readme",
+  "dependencies": {
+    "@types/colors": "^1.2.1",
+    "@types/lodash": "^4.14.191",
+    "@types/node": "^18.14.2",
+    "colors": "^1.4.0",
+    "fast-folder-size": "^1.7.1",
+    "lodash": "^4.17.21",
+    "typescript": "^4.9.5"
+  }
+}

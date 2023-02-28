@@ -1,0 +1,19 @@
+{
+  "include": ["src"],
+  "exclude": ["**/*.spec.ts"],
+  "compilerOptions": {
+    "outDir": "dist",
+    "target": "ESNext",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "declaration": true,
+    "sourceMap": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "strict": true,                                      /* Enable all strict type-checking options. */
+    "noImplicitAny": false,                            /* Enable error reporting for expressions and declarations with an implied 'any' type. */
+    "strictNullChecks": false,                         /* When type checking, take into account 'null' and 'undefined'. */
+  }
+}
