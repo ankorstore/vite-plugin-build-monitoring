@@ -2,6 +2,8 @@
 Monitor ram Memory when building, bundle sizing output and node_modules sizing
 Ideal for CI Checks and warning
 
+![Capture d’écran 2023-02-28 à 12 02 30](https://user-images.githubusercontent.com/7901366/222119515-3abc943a-3743-422e-8aca-1c6f161b32bf.png)
+
 
 ## Install
 
