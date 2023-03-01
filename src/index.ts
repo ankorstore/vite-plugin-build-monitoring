@@ -53,7 +53,8 @@ export default function monitoring(options: MonitoringOptions = {}): Plugin {
       await Promise.all([fastFolderSizeAsync(BUNDLE_ROOT_FOLDER_PATH), fastFolderSizeAsync('./node_modules')])
     ).map(toMB);
 
-    checkSizes({ bundleMB, nodeModuleMB, NODE_MODULES_MAX_SIZE, BUNDLE_MAX_SIZE });
+    checkNodeModulesSize({ nodeModuleMB, NODE_MODULES_MAX_SIZE });
+    checkBundleSizes({bundleMB,BUNDLE_MAX_SIZE})
   };
 
   return {
@@ -71,7 +72,7 @@ export default function monitoring(options: MonitoringOptions = {}): Plugin {
  */
 const warningMemoryLimit = debounce(
   (memUsage: number, MEMORY_WARNING_MAX_SIZE: number) =>
-    process.stdout.write(
+    console.log(
       bgYellow(
         `\nMEMORY_WARNING_MAX_SIZE option has been reached, memory used is ${memUsage}MB/${MEMORY_WARNING_MAX_SIZE}MB at ${new Date()}\n`
       )
@@ -83,38 +84,43 @@ const warningMemoryLimit = debounce(
  * Function that will check memory of bundle files and node_modules
  * If not value set, they will be shown at the end of the compilation but limit will be undefined
  */
-function checkSizes({
-  BUNDLE_MAX_SIZE,
+export function checkNodeModulesSize({
   NODE_MODULES_MAX_SIZE,
-  bundleMB,
   nodeModuleMB,
-}: Partial<MonitoringOptions> & { bundleMB: number; nodeModuleMB: number }) {
-  if (BUNDLE_MAX_SIZE && bundleMB > BUNDLE_MAX_SIZE) {
-    process.stderr.write(red(`\nBundle size is about ${bundleMB}MB exedeed ${BUNDLE_MAX_SIZE}MB\n`));
-  } else {
-    process.stdout.write(blue(`\nBundle size is about ${bundleMB}MB, limit is ${BUNDLE_MAX_SIZE}MB\n`));
-  }
-
+}: { NODE_MODULES_MAX_SIZE: number, nodeModuleMB: number }) {
   if (NODE_MODULES_MAX_SIZE && nodeModuleMB > NODE_MODULES_MAX_SIZE) {
-    process.stderr.write(red(`\nNode modules deps size is about ${nodeModuleMB}MB exedeed ${NODE_MODULES_MAX_SIZE}MB\n`));
+    console.error(red(`\nNode modules deps size is about ${nodeModuleMB}MB exedeed ${NODE_MODULES_MAX_SIZE}MB\n`));
   } else {
     process.stdout.write(blue(`\nNode modules deps size is about ${nodeModuleMB}MB, limit is ${NODE_MODULES_MAX_SIZE}MB\n`));
   }
 }
 
+export function checkBundleSizes({
+  BUNDLE_MAX_SIZE,
+  bundleMB,
+}: { BUNDLE_MAX_SIZE: number, bundleMB: number; }) {
+  if (BUNDLE_MAX_SIZE && bundleMB > BUNDLE_MAX_SIZE) {
+    console.error(red(`\nBundle size is about ${bundleMB}MB exedeed ${BUNDLE_MAX_SIZE}MB\n`));
+  } else {
+    process.stdout.write(blue(`\nBundle size is about ${bundleMB}MB, limit is ${BUNDLE_MAX_SIZE}MB\n`));
+  }
+}
+
+
 /**
  * Loop to check memory usage of vite process and subprocesses.
  */
-function checkMemoryUsage({ MEMORY_WARNING_MAX_SIZE, MEMORY_ERROR_MAX_SIZE, INTERVAL_CHECK_MEMORY }: Partial<MonitoringOptions>) {
+export function checkMemoryUsage({ MEMORY_WARNING_MAX_SIZE, MEMORY_ERROR_MAX_SIZE, INTERVAL_CHECK_MEMORY }: Partial<MonitoringOptions>) {
   const infos = {
     interval: null,
     tmpMaxMemoryConsumption: 0,
     dateMaxMemoryConsumption: new Date(),
   };
+  process.memoryUsage.rss() //?
   infos.interval = setInterval(async () => {
     const memUsage = toMB(process.memoryUsage.rss()); // directly get rss is faster than the top function
     if (memUsage > MEMORY_ERROR_MAX_SIZE) {
-      process.stderr.write(
+     console.error(
         red(
           `\nMEMORY_ERROR_MAX_SIZE option has been reached, memory used is ${memUsage}/${MEMORY_ERROR_MAX_SIZE} at ${new Date()}, killing vite\n`
         )
@@ -133,16 +139,16 @@ function checkMemoryUsage({ MEMORY_WARNING_MAX_SIZE, MEMORY_ERROR_MAX_SIZE, INTE
   return infos; // keep an object to have reference to data in other function
 }
 
-async function checkNbOfNodeModulesDeps(NB_NODE_MODULES_MAX?: number) {
-  const appRoot = process.cwd();
-  const packageJson = await import(resolve(appRoot , './package.json'));
-  const nbOfNodeModulesDeps = Object.keys(packageJson.dependencies).length + Object.keys(packageJson.devDependencies).length;
-
+export async function checkNbOfNodeModulesDeps(NB_NODE_MODULES_MAX?: number) {
   if (!NB_NODE_MODULES_MAX) {
     return;
   }
+  const appRoot = process.cwd(); //?
+  const packageJson = await import(resolve(appRoot , './package.json'));
+  const nbOfNodeModulesDeps = Object.keys(packageJson.dependencies ?? {}).length + Object.keys(packageJson.devDependencies?? {}).length;
+
   if (nbOfNodeModulesDeps > NB_NODE_MODULES_MAX) {
-    process.stderr.write(
+   console.error(
       red(`\nToo many node modules installed, ${nbOfNodeModulesDeps}/${NB_NODE_MODULES_MAX} did you add some ?\n`)
     );
   }
@@ -152,6 +158,6 @@ async function checkNbOfNodeModulesDeps(NB_NODE_MODULES_MAX?: number) {
  * Convert bytes to MB (not MiB) and fixed of 2
  * @param bytes number, to be converted into MB
  */
-function toMB(bytes: number) {
+export function toMB(bytes: number) {
   return Number((bytes / 1000 / 1000).toFixed(2));
 }
