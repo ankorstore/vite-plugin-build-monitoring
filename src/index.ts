@@ -37,7 +37,7 @@ export default function monitoring(options: MonitoringOptions = {}): Plugin {
   } = options;
 
   if (MEMORY_WARNING_MAX_SIZE > MEMORY_ERROR_MAX_SIZE) {
-    process.stderr.write(red(`\n MEMORY_WARNING_MAX_SIZE value should be lower than  MEMORY_ERROR_MAX_SIZE`));
+    console.error(red(`\n MEMORY_WARNING_MAX_SIZE value should be lower than  MEMORY_ERROR_MAX_SIZE`));
   }
 
   const infos = checkMemoryUsage({ MEMORY_WARNING_MAX_SIZE, MEMORY_ERROR_MAX_SIZE, INTERVAL_CHECK_MEMORY });
@@ -45,7 +45,7 @@ export default function monitoring(options: MonitoringOptions = {}): Plugin {
 
   const finalCallback = async () => {
     clearInterval(infos.interval); // keep the reference of infos , props are updated
-    process.stdout.write(
+    console.log(
       blue(`\nMax memory consumption: ${infos.tmpMaxMemoryConsumption}MB at ${infos.dateMaxMemoryConsumption}\n`)
     );
     //doing those check in async for I/O perf
@@ -91,7 +91,7 @@ export function checkNodeModulesSize({
   if (NODE_MODULES_MAX_SIZE && nodeModuleMB > NODE_MODULES_MAX_SIZE) {
     console.error(red(`\nNode modules deps size is about ${nodeModuleMB}MB exedeed ${NODE_MODULES_MAX_SIZE}MB\n`));
   } else {
-    process.stdout.write(blue(`\nNode modules deps size is about ${nodeModuleMB}MB, limit is ${NODE_MODULES_MAX_SIZE}MB\n`));
+    console.log(blue(`\nNode modules deps size is about ${nodeModuleMB}MB, limit is ${NODE_MODULES_MAX_SIZE}MB\n`));
   }
 }
 
@@ -102,7 +102,7 @@ export function checkBundleSizes({
   if (BUNDLE_MAX_SIZE && bundleMB > BUNDLE_MAX_SIZE) {
     console.error(red(`\nBundle size is about ${bundleMB}MB exedeed ${BUNDLE_MAX_SIZE}MB\n`));
   } else {
-    process.stdout.write(blue(`\nBundle size is about ${bundleMB}MB, limit is ${BUNDLE_MAX_SIZE}MB\n`));
+    console.log(blue(`\nBundle size is about ${bundleMB}MB, limit is ${BUNDLE_MAX_SIZE}MB\n`));
   }
 }
 
