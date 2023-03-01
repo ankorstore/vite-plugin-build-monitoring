@@ -1,15 +1,16 @@
-# vite-build-monitoring
-Monitor ram Memory when building, bundle sizing ans node_modules sizing
+# vite-plugin-build-monitoring
+Monitor ram Memory when building, bundle sizing output and node_modules sizing
+Ideal for CI Checks and warning
 
 
 ## Install
 
-`npm install  `
+`npm install vite-plugin-build-monitoring`
 
 ## Usage
 
 ```typescript
-import monitorPlugin from 'vite-build-monitoring';
+import monitorPlugin from 'vite-plugin-build-monitoring';
 
 // configure it
 

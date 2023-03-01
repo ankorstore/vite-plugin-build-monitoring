@@ -1,10 +1,8 @@
-
-import { blue, red, bgYellow } from 'colors';
-import { debounce } from 'lodash';
+import {blue, red, bgYellow} from 'colors';
+import {debounce} from 'lodash';
 import fastFolderSize from 'fast-folder-size';
-import { promisify } from 'util';
-import { resolve } from 'path';
-
+import {promisify} from 'util';
+import {resolve} from 'path';
 
 const fastFolderSizeAsync = promisify(fastFolderSize);
 
@@ -37,29 +35,42 @@ export default function monitoring(options: MonitoringOptions = {}): Plugin {
   } = options;
 
   if (MEMORY_WARNING_MAX_SIZE > MEMORY_ERROR_MAX_SIZE) {
-    console.error(red(`\n MEMORY_WARNING_MAX_SIZE value should be lower than  MEMORY_ERROR_MAX_SIZE`));
+    console.error(
+      red(
+        '\n MEMORY_WARNING_MAX_SIZE value should be lower than  MEMORY_ERROR_MAX_SIZE'
+      )
+    );
   }
 
-  const infos = checkMemoryUsage({ MEMORY_WARNING_MAX_SIZE, MEMORY_ERROR_MAX_SIZE, INTERVAL_CHECK_MEMORY });
+  const infos = checkMemoryUsage({
+    MEMORY_WARNING_MAX_SIZE,
+    MEMORY_ERROR_MAX_SIZE,
+    INTERVAL_CHECK_MEMORY,
+  });
   checkNbOfNodeModulesDeps(NB_NODE_MODULES_MAX);
 
   const finalCallback = async () => {
     clearInterval(infos.interval); // keep the reference of infos , props are updated
     console.log(
-      blue(`\nMax memory consumption: ${infos.tmpMaxMemoryConsumption}MB at ${infos.dateMaxMemoryConsumption}\n`)
+      blue(
+        `\nMax memory consumption: ${infos.tmpMaxMemoryConsumption}MB at ${infos.dateMaxMemoryConsumption}\n`
+      )
     );
     //doing those check in async for I/O perf
     const [bundleMB, nodeModuleMB] = (
-      await Promise.all([fastFolderSizeAsync(BUNDLE_ROOT_FOLDER_PATH), fastFolderSizeAsync('./node_modules')])
+      await Promise.all([
+        fastFolderSizeAsync(BUNDLE_ROOT_FOLDER_PATH),
+        fastFolderSizeAsync('./node_modules'),
+      ])
     ).map(toMB);
 
-    checkNodeModulesSize({ nodeModuleMB, NODE_MODULES_MAX_SIZE });
-    checkBundleSizes({bundleMB,BUNDLE_MAX_SIZE})
+    checkNodeModulesSize({nodeModuleMB, NODE_MODULES_MAX_SIZE});
+    checkBundleSizes({bundleMB, BUNDLE_MAX_SIZE});
   };
 
   return {
     name: 'monitoring',
-    //@ts-expect-error
+    //@ts-expect-error Plugin type for old vite version seems conflicting, using node Plugin type
     enforce: 'pre',
     apply: 'build',
     writeBundle: finalCallback,
@@ -78,7 +89,7 @@ const warningMemoryLimit = debounce(
       )
     ),
   2500,
-  { leading: true, trailing: true } // Will show the first and last out of memory limit warning
+  {leading: true, trailing: true} // Will show the first and last out of memory limit warning
 );
 /**
  * Function that will check memory of bundle files and node_modules
@@ -87,44 +98,68 @@ const warningMemoryLimit = debounce(
 export function checkNodeModulesSize({
   NODE_MODULES_MAX_SIZE,
   nodeModuleMB,
-}: { NODE_MODULES_MAX_SIZE: number, nodeModuleMB: number }) {
+}: {
+  NODE_MODULES_MAX_SIZE: number;
+  nodeModuleMB: number;
+}) {
   if (NODE_MODULES_MAX_SIZE && nodeModuleMB > NODE_MODULES_MAX_SIZE) {
-    console.error(red(`\nNode modules deps size is about ${nodeModuleMB}MB exedeed ${NODE_MODULES_MAX_SIZE}MB\n`));
+    console.error(
+      red(
+        `\nNode modules deps size is about ${nodeModuleMB}MB exedeed ${NODE_MODULES_MAX_SIZE}MB\n`
+      )
+    );
   } else {
-    console.log(blue(`\nNode modules deps size is about ${nodeModuleMB}MB, limit is ${NODE_MODULES_MAX_SIZE}MB\n`));
+    console.log(
+      blue(
+        `\nNode modules deps size is about ${nodeModuleMB}MB, limit is ${NODE_MODULES_MAX_SIZE}MB\n`
+      )
+    );
   }
 }
 
 export function checkBundleSizes({
   BUNDLE_MAX_SIZE,
   bundleMB,
-}: { BUNDLE_MAX_SIZE: number, bundleMB: number; }) {
+}: {
+  BUNDLE_MAX_SIZE: number;
+  bundleMB: number;
+}) {
   if (BUNDLE_MAX_SIZE && bundleMB > BUNDLE_MAX_SIZE) {
-    console.error(red(`\nBundle size is about ${bundleMB}MB exedeed ${BUNDLE_MAX_SIZE}MB\n`));
+    console.error(
+      red(`\nBundle size is about ${bundleMB}MB exedeed ${BUNDLE_MAX_SIZE}MB\n`)
+    );
   } else {
-    console.log(blue(`\nBundle size is about ${bundleMB}MB, limit is ${BUNDLE_MAX_SIZE}MB\n`));
+    console.log(
+      blue(
+        `\nBundle size is about ${bundleMB}MB, limit is ${BUNDLE_MAX_SIZE}MB\n`
+      )
+    );
   }
 }
-
 
 /**
  * Loop to check memory usage of vite process and subprocesses.
  */
-export function checkMemoryUsage({ MEMORY_WARNING_MAX_SIZE, MEMORY_ERROR_MAX_SIZE, INTERVAL_CHECK_MEMORY }: Partial<MonitoringOptions>) {
+export function checkMemoryUsage({
+  MEMORY_WARNING_MAX_SIZE,
+  MEMORY_ERROR_MAX_SIZE,
+  INTERVAL_CHECK_MEMORY,
+}: Partial<MonitoringOptions>) {
   const infos = {
     interval: null,
     tmpMaxMemoryConsumption: 0,
     dateMaxMemoryConsumption: new Date(),
   };
-  process.memoryUsage.rss() //?
   infos.interval = setInterval(async () => {
+    //@ts-expect-error rss exists !
     const memUsage = toMB(process.memoryUsage.rss()); // directly get rss is faster than the top function
     if (memUsage > MEMORY_ERROR_MAX_SIZE) {
-     console.error(
+      console.error(
         red(
           `\nMEMORY_ERROR_MAX_SIZE option has been reached, memory used is ${memUsage}/${MEMORY_ERROR_MAX_SIZE} at ${new Date()}, killing vite\n`
         )
       );
+      // eslint-disable-next-line no-process-exit
       process.exit(1);
     }
     if (memUsage > MEMORY_WARNING_MAX_SIZE) {
@@ -144,12 +179,16 @@ export async function checkNbOfNodeModulesDeps(NB_NODE_MODULES_MAX?: number) {
     return;
   }
   const appRoot = process.cwd(); //?
-  const packageJson = await import(resolve(appRoot , './package.json'));
-  const nbOfNodeModulesDeps = Object.keys(packageJson.dependencies ?? {}).length + Object.keys(packageJson.devDependencies?? {}).length;
+  const packageJson = await import(resolve(appRoot, './package.json'));
+  const nbOfNodeModulesDeps =
+    Object.keys(packageJson.dependencies ?? {}).length +
+    Object.keys(packageJson.devDependencies ?? {}).length;
 
   if (nbOfNodeModulesDeps > NB_NODE_MODULES_MAX) {
-   console.error(
-      red(`\nToo many node modules installed, ${nbOfNodeModulesDeps}/${NB_NODE_MODULES_MAX} did you add some ?\n`)
+    console.error(
+      red(
+        `\nToo many node modules installed, ${nbOfNodeModulesDeps}/${NB_NODE_MODULES_MAX} did you add some ?\n`
+      )
     );
   }
 }
