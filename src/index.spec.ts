@@ -1,3 +1,4 @@
+/* eslint-disable no-global-assign */
 import {
   toMB,
   checkMemoryUsage,
@@ -12,6 +13,12 @@ describe('All Unit function should pass', () => {
     expect(toMB(12_345_678)).toBe(12.35);
   });
   it('Should show an error if bundle size is above the limit', () => {
+    //@ts-expect-error, we want to modify the global process
+    process = {
+      env: {
+        MONITORING_LOG_ENABLED: 'true',
+      },
+    };
     const errorSpy = jest.spyOn(console, 'error');
     // I assume two is a variable? If not then don't forget to double quote like "two"
     checkBundleSizes({BUNDLE_MAX_SIZE: 10, bundleMB: 12});
@@ -36,6 +43,13 @@ describe('All Unit function should pass', () => {
     );
   });
   it('Should show an error in stderr if module deps quantity is higher than the limit', async () => {
+    //@ts-expect-error, we want to modify the global process
+    process = {
+      env: {
+        MONITORING_LOG_ENABLED: 'true',
+      },
+      cwd: () => '123',
+    };
     const spy = jest.spyOn(process, 'cwd');
     const logSpy = jest.spyOn(console, 'error');
     const appRoot = resolve(__dirname, '../');
@@ -58,7 +72,7 @@ describe('All Unit function should pass', () => {
       MEMORY_WARNING_MAX_SIZE: 100,
       MEMORY_ERROR_MAX_SIZE: 1500,
     });
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(5000);
     expect(logSpy).toHaveBeenCalledWith(
       expect.stringContaining(
         'MEMORY_WARNING_MAX_SIZE option has been reached, memory used is 150MB/100MB'
@@ -69,6 +83,9 @@ describe('All Unit function should pass', () => {
   it('Should output an error and kill process if memory usage is way higher than expected', async () => {
     // eslint-disable-next-line no-global-assign
     process = {
+      env: {
+        MONITORING_LOG_ENABLED: 'true',
+      },
       memoryUsage: {
         //@ts-expect-error  is needed for test runing with ts-jest
         rss() {
